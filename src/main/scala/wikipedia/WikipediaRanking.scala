@@ -23,7 +23,6 @@ object WikipediaRanking {
   val conf = new SparkConf().setAppName("SparkWikipediaProgLangAnalysis")
                             .setMaster("local")
   val sc = new SparkContext(conf)
-  // Hint: use a combination of `sc.textFile`, `WikipediaData.filePath` and `WikipediaData.parse`
   val wikiRdd: RDD[WikipediaArticle] = sc.textFile(WikipediaData.filePath)
                                          .map(WikipediaData.parse)
 
@@ -46,7 +45,12 @@ object WikipediaRanking {
    *   Note: this operation is long-running. It can potentially run for
    *   several seconds.
    */
-  def rankLangs(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = ???
+  def rankLangs(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = {
+    val ret = langs.map(lang => (lang, occurrencesOfLang(lang, rdd)))
+                   .sortBy(-_._2)
+    println(ret)
+    return ret
+  } 
 
   /* Compute an inverted index of the set of articles, mapping each language
    * to the Wikipedia pages in which it occurs.
