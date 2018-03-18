@@ -45,17 +45,20 @@ object WikipediaRanking {
    *   Note: this operation is long-running. It can potentially run for
    *   several seconds.
    */
-  def rankLangs(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = {
-    val ret = langs.map(lang => (lang, occurrencesOfLang(lang, rdd)))
-                   .sortBy(-_._2)
-    println(ret)
-    return ret
-  } 
+  def rankLangs(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = 
+    langs.map(lang => (lang, occurrencesOfLang(lang, rdd)))
+         .sortBy(-_._2)
 
   /* Compute an inverted index of the set of articles, mapping each language
    * to the Wikipedia pages in which it occurs.
    */
-  def makeIndex(langs: List[String], rdd: RDD[WikipediaArticle]): RDD[(String, Iterable[WikipediaArticle])] = ???
+  def makeIndex(langs: List[String], rdd: RDD[WikipediaArticle]): RDD[(String, Iterable[WikipediaArticle])] = {
+    val languageArticles = langs.map(lang => (lang, rdd.filter(_.mentionsLanguage(lang)).collect()))
+                                .toMap
+                                
+    sc.parallelize[String](langs)
+      .map(lang => (lang, languageArticles(lang)))
+  }
 
   /* (2) Compute the language ranking again, but now using the inverted index. Can you notice
    *     a performance improvement?
