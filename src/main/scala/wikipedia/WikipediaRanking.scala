@@ -70,7 +70,8 @@ object WikipediaRanking {
     index.map({ 
             case (lang, articles) => (lang, articles.size) 
           })
-          .collect()
+          .sortBy(-_._2)
+          .collect
           .toList
   }
 
@@ -81,7 +82,16 @@ object WikipediaRanking {
    *   Note: this operation is long-running. It can potentially run for
    *   several seconds.
    */
-  def rankLangsReduceByKey(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = ???
+  def rankLangsReduceByKey(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = {
+    sc.parallelize(
+      langs.map(lang => (lang, rdd.filter(_.mentionsLanguage(lang)).collect().size))
+    )
+    .reduceByKey(_ + _)
+    .sortBy(-_._2)
+    .collect
+    .toList 
+
+  }
 
   def main(args: Array[String]) {
 
